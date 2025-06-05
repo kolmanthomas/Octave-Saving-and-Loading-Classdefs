@@ -25,6 +25,7 @@ DEFUN_DLD (loadclass, args, nargout,
         error("loadclass: too many input arguments.");
     }
 
+    // Question: Does the filename need to be the same as the class name? 
     // Check if the first argument is a filename of a classdef object 
     if (!args(0).is_defined() || !args(0).is_string()) {
         error("loadclass: first argument must be a filename.");
@@ -48,8 +49,13 @@ DEFUN_DLD (loadclass, args, nargout,
         error("loadclass: loaded data is not a struct.");
     }
     octave_scalar_map st = tc.scalar_map_value();
+
+    // Three options here:
+    // We can try to save everything to a struct, initialize the classdef object, and return it (problem: don't know how to return a classdef object in an octave_value)
+    // Or: We can reach into the interpreter and try to find an existing classdef object to populate
+    // Or: Just return a struct (the regular 'load' method already does this)
     
-    // Let's save everything to a struct
+    // Just to see if the loading works
     for (const auto& entry : st) {
         // Print the property name and value
         octave_stdout << "Property: " << entry.first << " has value: " 
@@ -72,8 +78,23 @@ DEFUN_DLD (loadclass, args, nargout,
     octave_value_list retval (nargout);
     //octave_value val_obj = obj.get();
     //retval(0) = obj; 
+    retval(0) = tc;
 
     return retval;
 }
 
+
+/*
+ * myclass will have a property called 'Name', and a constructor that takes a struct to initialize * that property.
+ * saveclass will save the class definition to the file 'myclass'
+ */
+
+/*
+%!test
+%! s.Name = "Thomas";
+%! m = myclass(); 
+%! saveclass(m) 
+%! s_new = loadclass('myclass');
+%! assert (s_new.Name = "Thomas")
+*/
 
