@@ -27,6 +27,7 @@ Array<T> read_data(const matvar_t *matvar)
 
     // data will be freed by Array destructor
     T *data = new T[matvar->nbytes / matvar->data_size];
+    octave_stdout << "Reading data of size: " << matvar->nbytes << " bytes, with data size: " << matvar->data_size << " bytes.\n";
     std::memcpy(data, matvar->data, matvar->nbytes);
 
     Array<T> a (data, dv); 
@@ -81,6 +82,7 @@ void get_var(const matvar_t *matvar, octave_scalar_map& st)
             octave_stdout << "Variable " << matvar->name << " is of type uint64.\n";
             break;
         case MAT_C_CHAR: {
+            octave_stdout << "CHAR\n";
             charNDArray a (read_data<char>(matvar));
             st.assign(matvar->name, a);
             break;
@@ -138,6 +140,8 @@ void readclass(const std::string& filename, octave_scalar_map& st)
         std::string name (matvar->name);
 
         get_var(matvar, st); 
+
+        octave_stdout << "Variable '" << name << "' has been read.\n";
 
         Mat_VarFree(matvar);
     }
@@ -222,11 +226,9 @@ octave_scalar_map saveobj(
     args(0) = obj; 
     octave_value_list retval = loadobj_method.execute(obj, 1);
 
-    /*
-    if (retval.length() != 1 || !retval(0).is_scalar_type() ) {
+    if (!retval(0).is_defined() || !retval(0).isstruct()) {
         error("matiotest: saveobj method did not return a scalar map.");
     }
-    */
 
     octave_scalar_map st = retval(0).scalar_map_value();
     
@@ -258,7 +260,7 @@ write_var(const std::string& name, octave_value val)
             octave_stdout << "is a char array\n";
             // Get the underlying pointer
             const char* data = val.char_array_value().data();
-            matvar = Mat_VarCreate (name.c_str(), MAT_C_CHAR, MAT_T_UTF8, rank, dims, data, 0);
+                matvar = Mat_VarCreate (name.c_str(), MAT_C_CHAR, MAT_T_UTF8, rank, dims, data, 0);
             break;
         }
         case 13: { // btyp_struct
@@ -307,6 +309,11 @@ writeclass(const std::string& filename,
 
     Mat_Close(matfp);
 
+    octave_stdout << "====== TEST =========" << "\n";
+    const char* hello = "Hello, world!"; // 13 characters
+    octave_stdout << "Size of string: " << strlen(hello) << "\n";
+    octave_stdout << "====== END TEST ===== " << "\n";
+
     // Let's verify that the file was created with all the right variables
     octave_scalar_map st2;
     readclass(filename, st2);
@@ -335,7 +342,6 @@ DEFUN_DLD (matiotest, args, nargout,
 
     std::string opt = args(0).string_value ();
 
-    octave::cdef_object objdjhd;
     octave_value obj;
     octave::cdef_method loadobj_method;
     octave::cdef_method saveobj_method;
