@@ -333,11 +333,11 @@ DEFUN_DLD (matiotest, args, nargout,
     // We're going to check that all the parameters are valid before we start loading or saving anything.
 
     if (nargin < 3 || nargin > 3) {
-        error ("hdf5class: Invalid number of input arguments. Expected 2.");
+        error ("matiotest: Invalid number of input arguments. Expected 3.");
     }
 
     if (!(args(0).is_defined() && args(0).is_string())) {
-        error ("hdf5class: First argument must be a string, either 'r' or 'w'."); 
+        error ("matiotest: First argument must be a string, either 'r' or 'w'."); 
     }
 
     std::string opt = args(0).string_value ();
@@ -444,7 +444,7 @@ DEFUN_DLD (matiotest, args, nargout,
             retval(0) = octave_value(1);
         }
     } else {
-        error ("hdf5class: First argument must be 'r' or 'w'.");
+        error ("matiotest: First argument must be 'r' or 'w'.");
     }
 
 
